@@ -1,0 +1,47 @@
+#grid {
+    width: 360px;
+    height: 360px;
+    margin: 0 auto;
+    display: table;
+}
+
+.gridRow {
+    height: 40px;
+    width: 100%;
+    display: table-row;
+}
+
+.gridCell {
+    height: 40px;
+    width: 40px;
+    display: table-cell;
+    border: 1px solid gray;
+    border-collapse: collapse;
+}
+
+.gridCell.strongRight {
+    border-right: 3px solid black;
+}
+
+.gridCell.strongBottom {
+    border-bottom: 3px solid black;
+}
+
+.gridCell input {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+}
+
+#submitButton {
+    width: 125px;
+    margin: 0 auto;
+    height: 40px;
+    border-radius: 15px;
+    font-size: 18px;
+    line-height: 40px;
+    text-align: center;
+    cursor: pointer;
+    background-color: #00AA00;
+    margin-top: 20px;
+}
