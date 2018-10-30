@@ -26,7 +26,6 @@ var Sudoku = {
             for (var o = 0; o < this.COLUMN_SIZE; o++) {
                 var node = new this.Node(i, o)
                 this.Tables[i].push(node);
-                console.log(node.groupID);
             }
         }
         this.initialize_adjacency();
@@ -64,16 +63,20 @@ var Sudoku = {
                 var adjNode = this.Tables[o][column];
                 this.adjacency_matrix[i][adjNode.adjacencyIndex] = 1;
             }
-
             // Mark the adjacency matrix as one for each node in the same group
-            var groupStartRow = (node.groupID % 3) * 3;
-            var groupStartColumn = Math.floor(node.groupID / 3) * 3;
-            for(var o = groupStartRow; o < groupStartColumn + 3; o++) {
+            var groupStartRow = Math.floor(node.groupID / 3) * 3;
+            var groupStartColumn = (node.groupID % 3) * 3;
+            for(var o = groupStartRow; o < groupStartRow + 3; o++) {
                 for(var p = groupStartColumn; p < groupStartColumn + 3; p++) {
                     if(row == o && column == p)
                         continue;
                     var adjNode = this.Tables[o][p];
                     this.adjacency_matrix[i][adjNode.adjacencyIndex] = 1;
+                    if(adjNode.groupID != node.groupID) {
+                        console.log("ERROR: THE WRONG GROUPS ARE BEING PAIRED:");
+                        console.log(node);
+                        console.log(adjNode);
+                    }
                 }
             }
         }
@@ -107,7 +110,19 @@ var Sudoku = {
     },
     
     BindNodeFunctions: function() {
-
+        Sudoku.Node.prototype.getAdjacentNodes = function(){
+            var adjColumn = Sudoku.adjacency_matrix[this.adjacencyIndex];
+            var adjNodes = [];
+            for(var i = 0; i < adjColumn.length; i++) {
+                if(adjColumn[i] == 0)
+                    continue;
+                var column = i % Sudoku.COLUMN_SIZE;
+                var row = Math.floor((i - column) / Sudoku.ROW_SIZE);
+                var adjNode = Sudoku.Tables[row][column];
+                adjNodes.push(adjNode);
+            }  
+            return adjNodes;
+        }
     },
 
 
@@ -132,9 +147,9 @@ var Sudoku = {
         // If we are clearing the value, then that is always approved
         if(value == "") {
             node.coloring = 0;
-            return;
+            return; 
         }
-
+ 
         // Make sure the value is within our bounds
         if(isNaN(value) || value < 1 || value > 9) {
             input.value = "";
