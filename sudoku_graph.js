@@ -86,7 +86,7 @@ var Sudoku = {
             for(var o = 0; o < 81; o ++) {
                 str += (this.adjacency_matrix[i][o] + " ");
             }
-            str += ("\n")
+            str += ("\n");
         }
         //console.log(str);
     },
@@ -102,7 +102,6 @@ var Sudoku = {
      */
     Node: function(row, column){
         this.coloring = 0;
-        this.prohibitedColors = [];
         this.row = row;
         this.column = column;
         this.groupID = Math.floor(this.row / 3) * 3 + Math.floor(this.column / 3);
@@ -110,7 +109,7 @@ var Sudoku = {
     },
     
     BindNodeFunctions: function() {
-        Sudoku.Node.prototype.getAdjacentNodes = function(){
+        Sudoku.Node.prototype.getAdjacentNodes = function() {
             var adjColumn = Sudoku.adjacency_matrix[this.adjacencyIndex];
             var adjNodes = [];
             for(var i = 0; i < adjColumn.length; i++) {
@@ -122,6 +121,35 @@ var Sudoku = {
                 adjNodes.push(adjNode);
             }  
             return adjNodes;
+        };
+
+        Sudoku.Node.prototype.getProhibitedColors = function() {
+            var colors = [];
+            var index = this.adjacencyIndex;
+            var testColumn = Sudoku.adjacency_matrix[index];
+    
+            for(var i = 0; i < testColumn.length; i++) {
+                // Only consider nodes that are adjacent
+                if(testColumn[i] != 1) {
+                    continue;
+                }
+    
+                // Get the corresponding node based on the adjacency index
+                var column = i % Sudoku.COLUMN_SIZE;
+                var row = Math.floor((i - column) / Sudoku.ROW_SIZE);
+                var testNode = Sudoku.Tables[row][column];
+                
+                // If there is no coloring, we can move on
+                if(testNode.coloring == 0 || isNaN(testNode.coloring)) {
+                    continue;
+                }
+
+                // If the adjacent node's color hasn't been accounted for, add that
+                if(colors.indexOf(testNode.coloring) == -1) {
+                    colors.push(testNode.coloring);
+                }
+            }
+            return colors;
         }
     },
 
@@ -170,27 +198,8 @@ var Sudoku = {
     },
 
     testColoring: function(node, color) {
-        var index = node.adjacencyIndex;
-        var testColumn = this.adjacency_matrix[index];
-
-        for(var i = 0; i < testColumn.length; i++) {
-            // Only consider nodes that are adjacent
-            if(testColumn[i] != 1) {
-                continue;
-            }
-
-            // Get the corresponding node based on the adjacency index
-            var column = i % this.COLUMN_SIZE;
-            var row = Math.floor((i - column) / this.ROW_SIZE);
-            var testNode = this.Tables[row][column];
-
-            // if the adjacent node already has our desired color, then it isn't avaliable
-            if(testNode.coloring == color) {
-                return false;
-            }
-        }
-        // If we get to this point, all adjacent nodes have not taken the color yet
-        return true;
+        var colors = node.getProhibitedColors();
+        return colors.indexOf(parseInt(color)) == -1;
     }
 
     /* 
