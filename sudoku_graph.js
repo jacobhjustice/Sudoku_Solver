@@ -5,16 +5,21 @@ var Sudoku = {
     COLUMN_SIZE: 9,
 
     /*
-     *  Tables is a 9 x 9 array, where Tables[i][j] returns the node for row i, column j
+     *  Tables is the 9 x 9 array backing the sudoku board, where Tables[i][j] returns the node for row i, column j.
      */
     Tables: [],
 
     /*
-     * Adjacency Matrix is 
-     * 
-     * 
+     *  AdjacencyMatrix is an 81 x 81 matrix used to determine if any two nodes are adjacent to each other.
+     *  A "1" in AdjacencyMatrix[i][j] implies that the node with adjacencyIndex i is adjacent to the node with adjacencyIndex j.
+     *  In general, adjacent nodes for the Sudoky game are those which cannot have the same values,
+     *  So any given node is adjactent to every node (except itself) in it's column, row, and 3 x 3 grouping.
+     *  The relationship between adjacencyIndex, column, and row for a given node N can be seen as follows:
+     *      N.adjacencyIndex = N.row * Sudoku.ROW_SIZE + N.column
+     *      N.column = N.adjacencyIndex % Sudoku.COLUMN_SIZE
+     *      N.row = Math.floor((N.adjacencyIndex - N.column) / Sudoku.ROW_SIZE)
      */
-    adjacency_matrix: [],
+    AdjacencyMatrix: [],
 
     /*
      * Initialize sets up the Tables array with empty node values
@@ -34,9 +39,9 @@ var Sudoku = {
     initialize_adjacency: function () {
         // Create an empty matrix and leave each vertex unadjacent
         for (var i = 0; i < 81; i++) {
-            this.adjacency_matrix.push([]);
+            this.AdjacencyMatrix.push([]);
             for (var o = 0; o < 81; o ++) {
-                this.adjacency_matrix[i].push(0);
+                this.AdjacencyMatrix[i].push(0);
             }
         }
 
@@ -53,7 +58,7 @@ var Sudoku = {
                 if(column == o)
                     continue;
                 var adjNode = this.Tables[row][o];
-                this.adjacency_matrix[i][adjNode.adjacencyIndex] = 1;              
+                this.AdjacencyMatrix[i][adjNode.adjacencyIndex] = 1;              
             }
 
             // Mark the adjacency matrix as one for each node in the same row
@@ -61,7 +66,7 @@ var Sudoku = {
                 if(row == o)
                     continue;
                 var adjNode = this.Tables[o][column];
-                this.adjacency_matrix[i][adjNode.adjacencyIndex] = 1;
+                this.AdjacencyMatrix[i][adjNode.adjacencyIndex] = 1;
             }
             // Mark the adjacency matrix as one for each node in the same group
             var groupStartRow = Math.floor(node.groupID / 3) * 3;
@@ -71,7 +76,7 @@ var Sudoku = {
                     if(row == o && column == p)
                         continue;
                     var adjNode = this.Tables[o][p];
-                    this.adjacency_matrix[i][adjNode.adjacencyIndex] = 1;
+                    this.AdjacencyMatrix[i][adjNode.adjacencyIndex] = 1;
                     if(adjNode.groupID != node.groupID) {
                         console.log("ERROR: THE WRONG GROUPS ARE BEING PAIRED:");
                         console.log(node);
@@ -84,21 +89,20 @@ var Sudoku = {
         var str = "";
         for(var i = 0; i < 81; i++) {
             for(var o = 0; o < 81; o ++) {
-                str += (this.adjacency_matrix[i][o] + " ");
+                str += (this.AdjacencyMatrix[i][o] + " ");
             }
             str += ("\n");
         }
-        //console.log(str);
     },
 
 
     /*
-     *  Node is the data structure of any given "cell" of the game.
+     *  Node is the data structure of any given "cell" of the game table.
      *  Coloring is the int value of a "color" assigned to the node
-     *  ProbibitedColors is the array of integers that cannot be assigned to this node
-     *                      and is used to determine the coloring
      *  Row is the index the element exists in inside Tables
      *  Column is the index the element exists in inside Tables[row]
+     *  GroupID corresponds to 1 of 9 unique 3 x 3 groups and is used for setting up AdjacencyMatrix
+     *  AdjacencyIndex corresponds to the Node's row/column location in AdjacencyMatrix
      */
     Node: function(row, column){
         this.coloring = 0;
@@ -108,25 +112,19 @@ var Sudoku = {
         this.adjacencyIndex = this.row * Sudoku.ROW_SIZE + this.column;
     },
     
+    /*
+     *  BindNodeFunctions attaches member functions to individual node objects
+     */
     BindNodeFunctions: function() {
-        Sudoku.Node.prototype.getAdjacentNodes = function() {
-            var adjColumn = Sudoku.adjacency_matrix[this.adjacencyIndex];
-            var adjNodes = [];
-            for(var i = 0; i < adjColumn.length; i++) {
-                if(adjColumn[i] == 0)
-                    continue;
-                var column = i % Sudoku.COLUMN_SIZE;
-                var row = Math.floor((i - column) / Sudoku.ROW_SIZE);
-                var adjNode = Sudoku.Tables[row][column];
-                adjNodes.push(adjNode);
-            }  
-            return adjNodes;
-        };
-
+        /*
+         *  GetProhibitedColors retrieves an array of colors that cannot be used.
+         *  This is determined by adding a color to the list if it is not already accounted for, and is an adjacent node's coloring.
+         *  Note that different neighbors can have the same color as each other, and that's okay.
+         */
         Sudoku.Node.prototype.getProhibitedColors = function() {
             var colors = [];
             var index = this.adjacencyIndex;
-            var testColumn = Sudoku.adjacency_matrix[index];
+            var testColumn = Sudoku.AdjacencyMatrix[index];
     
             for(var i = 0; i < testColumn.length; i++) {
                 // Only consider nodes that are adjacent
@@ -152,6 +150,9 @@ var Sudoku = {
             return colors;
         };
 
+        /*
+         *  GetValidColors is the set of all colors with the prohibited colors removed.
+         */
         Sudoku.Node.prototype.getValidColors = function() {
             // Start with array of all colors
             var colors = [];
