@@ -106,7 +106,6 @@ var Sudoku = {
         this.column = column;
         this.groupID = Math.floor(this.row / 3) * 3 + Math.floor(this.column / 3);
         this.adjacencyIndex = this.row * Sudoku.ROW_SIZE + this.column;
-        this.potentialColor = 0;
     },
     
     BindNodeFunctions: function() {
@@ -222,22 +221,26 @@ var Sudoku = {
         return colors.indexOf(parseInt(color)) == -1;
     },
 
-    /* 
-     *  Utility functions for the Node class
-     *  getGroupID, getAdjacencyIndex, getPotentialColors
-     */
-
     solve: function() {
         var success = this.attemptCellColoring(0, 0);
 
-        var text;
-        var header = document.getElementById("heading");
-        if(success) {
-            text = "I solved your puzzle! Feel free to try another one!";
-        } else {
-            text = "Something went wrong. I couldn't solve the puzzle."
-        }
+        var text = success? "I solved your puzzle!<br/>Feel free to try another one!" : "Something went wrong. I couldn't solve the puzzle.";
+        var header = document.getElementById("heading"); 
         header.innerHTML = text;
+    },
+
+    reset: function() {
+        var values = document.querySelectorAll(".sudokuValue");
+        for(var i = 0; i < this.ROW_SIZE; i++) {
+            for(var o = 0; o < this.COLUMN_SIZE; o++) {
+                this.Tables[i][o].coloring = 0;
+            }
+        }
+        for(var i = 0; i < values.length; i++) {
+            values[i].value = "";
+            values[i].style.backgroundColor = "white";
+        }
+        document.getElementById("heading").innerHTML = 'Welcome to the Sudoku Solver! <br/>Input some cells using basic sudoku rules (No repeating 1-9 value in the same row, column, or 3x3 grouping), and then hit "Solve Puzzle!"'
     },
 
     attemptCellColoring: function(row, column, changeStack) {

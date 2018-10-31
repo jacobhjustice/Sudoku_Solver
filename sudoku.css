@@ -56,4 +56,19 @@ body {
     cursor: pointer;
     background-color: #00AA00;
     margin-top: 20px;
+    color: white;
+}
+
+#resetButton {
+    width: 125px;
+    margin: 0 auto;
+    height: 40px;
+    border-radius: 15px;
+    font-size: 18px;
+    line-height: 40px;
+    text-align: center;
+    cursor: pointer;
+    background-color: #AA0000;
+    color: white;
+    margin-top: 20px;
 }
