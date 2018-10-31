@@ -228,7 +228,13 @@ var Sudoku = {
      */
 
     solve: function() {
-        this.attemptCellColoring(0, 0);
+        var success = this.attemptCellColoring(0, 0);
+        if(success) {
+            console.log("I SOLVED IT!!!");
+        } else {
+            console.log("Ibroke");
+        }
+
     },
 
     attemptCellColoring: function(row, column, changeStack) {
@@ -257,10 +263,11 @@ var Sudoku = {
         var colors = node.getValidColors();
         var cell = document.querySelector(".sudokuValue[data-row='" + row +"'][data-column='" + column + "']");
 
-        // // If this cell was already colored, move on (this means it's user input)
-        // if(!isNaN(node.coloring) && node.coloring > 0) {
-        //     this.attemptCellColoring(row, column + 1);
-        // }
+        // If this cell was already colored, move on (this means it's user input)
+        if(!isNaN(node.coloring) && node.coloring > 0) {
+            var success = this.attemptCellColoring(row, column + 1);
+            return success;
+        }
 
         // For each valid color of node (starting at the first avaliable) set the current node to the current color
         // Move on to the next cell working off of the assumption that the past colors are all valid for the rest of the puzzle
@@ -270,13 +277,14 @@ var Sudoku = {
             
             node.coloring = colors[i];
             cell.value = colors[i];
-            success = this.attemptCellColoring(row, column + 1);
+            var success = this.attemptCellColoring(row, column + 1);
             if(success) {
                 return true;
             }
         }
 
         cell.value = "";
+        node.coloring = 0;
         return false;
 
     }
