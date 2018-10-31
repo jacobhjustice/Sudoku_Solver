@@ -106,6 +106,7 @@ var Sudoku = {
         this.column = column;
         this.groupID = Math.floor(this.row / 3) * 3 + Math.floor(this.column / 3);
         this.adjacencyIndex = this.row * Sudoku.ROW_SIZE + this.column;
+        this.potentialColor = 0;
     },
     
     BindNodeFunctions: function() {
@@ -150,6 +151,21 @@ var Sudoku = {
                 }
             }
             return colors;
+        };
+
+        Sudoku.Node.prototype.getValidColors = function() {
+            // Start with array of all colors
+            var colors = [];
+            for(var i = 0; i < Sudoku.ROW_SIZE; i++) {
+                colors.push(i + 1);
+            }
+
+            // Reject all colors that are invalid
+            var invalid = this.getProhibitedColors();
+            colors = colors.filter(function(c) {
+                return invalid.indexOf(c) == -1;
+            });
+            return colors;
         }
     },
 
@@ -175,6 +191,7 @@ var Sudoku = {
         // If we are clearing the value, then that is always approved
         if(value == "") {
             node.coloring = 0;
+            input.style.backgroundColor = "white";
             return; 
         }
  
@@ -182,6 +199,7 @@ var Sudoku = {
         if(isNaN(value) || value < 1 || value > 9) {
             input.value = "";
             node.coloring = 0;
+            input.style.backgroundColor = "white";
             return;
         }
 
@@ -190,20 +208,76 @@ var Sudoku = {
         if(!this.testColoring(node, value)) {
             input.value = "";
             node.coloring = 0;
+            input.style.backgroundColor = "white";
             return;
         }
 
         node.coloring = parseInt(value);
+        input.style.backgroundColor = "lightgrey";
 
     },
 
     testColoring: function(node, color) {
         var colors = node.getProhibitedColors();
         return colors.indexOf(parseInt(color)) == -1;
-    }
+    },
 
     /* 
      *  Utility functions for the Node class
      *  getGroupID, getAdjacencyIndex, getPotentialColors
      */
+
+    solve: function() {
+        this.attemptCellColoring(0, 0);
+    },
+
+    attemptCellColoring: function(row, column, changeStack) {
+        // If row = 8, column = 9 done, return success
+        // If column > 8, column = 0, row++
+        // Get node
+        // Get possible colors for node
+        // iterate over possible colors [0] first
+        // set color, add node to changeStack
+        // call attemptCellColoring(row, column + 1)
+        // if success, return success
+        // If fail keep iterating
+        // If no options, clear the cells value, return failure and head upstream
+        //change stack may be unnecesary?
+
+        // Check for done, handle next row
+        if(row == 8 && column == 9) {
+            return true;
+        } else if(column == 9) {
+            row++;
+            column = 0;
+        }
+ 
+        // Get the current node, valid colors, and the corresponding html cell
+        var node = this.Tables[row][column];
+        var colors = node.getValidColors();
+        var cell = document.querySelector(".sudokuValue[data-row='" + row +"'][data-column='" + column + "']");
+
+        // // If this cell was already colored, move on (this means it's user input)
+        // if(!isNaN(node.coloring) && node.coloring > 0) {
+        //     this.attemptCellColoring(row, column + 1);
+        // }
+
+        // For each valid color of node (starting at the first avaliable) set the current node to the current color
+        // Move on to the next cell working off of the assumption that the past colors are all valid for the rest of the puzzle
+        // If at any point there are no avaliable colors (or we are out of colors), we know the present solution is not valid
+        // So we will return false and try the next color for the layer above.
+        for(var i = 0; i < colors.length; i++) {
+            
+            node.coloring = colors[i];
+            cell.value = colors[i];
+            success = this.attemptCellColoring(row, column + 1);
+            if(success) {
+                return true;
+            }
+        }
+
+        cell.value = "";
+        return false;
+
+    }
 };
