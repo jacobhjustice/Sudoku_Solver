@@ -229,27 +229,18 @@ var Sudoku = {
 
     solve: function() {
         var success = this.attemptCellColoring(0, 0);
-        if(success) {
-            console.log("I SOLVED IT!!!");
-        } else {
-            console.log("Ibroke");
-        }
 
+        var text;
+        var header = document.getElementById("heading");
+        if(success) {
+            text = "I solved your puzzle! Feel free to try another one!";
+        } else {
+            text = "Something went wrong. I couldn't solve the puzzle."
+        }
+        header.innerHTML = text;
     },
 
     attemptCellColoring: function(row, column, changeStack) {
-        // If row = 8, column = 9 done, return success
-        // If column > 8, column = 0, row++
-        // Get node
-        // Get possible colors for node
-        // iterate over possible colors [0] first
-        // set color, add node to changeStack
-        // call attemptCellColoring(row, column + 1)
-        // if success, return success
-        // If fail keep iterating
-        // If no options, clear the cells value, return failure and head upstream
-        //change stack may be unnecesary?
-
         // Check for done, handle next row
         if(row == 8 && column == 9) {
             return true;
