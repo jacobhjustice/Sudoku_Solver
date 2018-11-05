@@ -169,7 +169,9 @@ var Sudoku = {
         }
     },
 
-
+    /*
+     *  BuildTableHTML takes care of generating our table on the document.
+     */
     BuildTableHTML: function() {
         var html = "";
         for (var i = 0; i < 9; i++) {
@@ -182,6 +184,11 @@ var Sudoku = {
         document.getElementById("grid").innerHTML = html;
     },
 
+    /*
+     *  UpdateColoring is called on input change for any table cell's input box.
+     *  The function checks the inputted value to make sure it is valid (no adjacent nodes have the same coloring),
+     *  And then updates the correspoinging Node in Tables[row][column] to have the new coloring.
+     */
     updateColoring: function(input){
         var value = input.value;
         var row = input.dataset.row;
@@ -217,19 +224,29 @@ var Sudoku = {
 
     },
 
+    /*
+     *  TestColoring checks to be sure that a given potential node coloring isn't used by any of its neighbors.
+     */
     testColoring: function(node, color) {
         var colors = node.getProhibitedColors();
         return colors.indexOf(parseInt(color)) == -1;
     },
 
+    /*
+     *  Solve is called when you hit the solve button on the document.
+     *  This is where the recursive coloring function is called, and the html is modified depending on the result.
+     */
     solve: function() {
         var success = this.attemptCellColoring(0, 0);
-
         var text = success? "I solved your puzzle!<br/>Feel free to try another one!" : "Something went wrong. I couldn't solve the puzzle.";
         var header = document.getElementById("heading"); 
         header.innerHTML = text;
     },
 
+    /*
+     *  Reset is called when you hit the reset button on the document.
+     *  All inputs in the table are cleared and our colorings for each node are reset to 0.
+     */
     reset: function() {
         var values = document.querySelectorAll(".sudokuValue");
         for(var i = 0; i < this.ROW_SIZE; i++) {
@@ -243,8 +260,15 @@ var Sudoku = {
         }
         document.getElementById("heading").innerHTML = 'Welcome to the Sudoku Solver! <br/>Input some cells using basic sudoku rules (No repeating 1-9 value in the same row, column, or 3x3 grouping), and then hit "Solve Puzzle!"'
     },
-
-    attemptCellColoring: function(row, column, changeStack) {
+    
+    /*
+     *  AttemptCellColoring is a recursive function that systematically colors each cell in the table with one of it's avaliable colors.
+     *  Starting at Sudoku.Tables[0][0] move on to the next color (Sudoku.Tables[0][1]) if this cell has been set by user,
+     *  Otherwise, set the current cell to be the first avaliable color (Node.getValidColors()) and then call attemptCellColoring(row, column+1).
+     *  If at any point there are no avaliable colors, return false upstream until we get to a point there is another avaliable color.
+     *  We will eventually finish the puzzel by backtracking when neccesary. At that point, we return true all the way back to the initial call.
+     */
+    attemptCellColoring: function(row, column) {
         // Check for done, handle next row
         if(row == 8 && column == 9) {
             return true;
@@ -269,7 +293,6 @@ var Sudoku = {
         // If at any point there are no avaliable colors (or we are out of colors), we know the present solution is not valid
         // So we will return false and try the next color for the layer above.
         for(var i = 0; i < colors.length; i++) {
-            
             node.coloring = colors[i];
             cell.value = colors[i];
             var success = this.attemptCellColoring(row, column + 1);
